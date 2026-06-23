@@ -34,7 +34,7 @@ uint8_t *read_file_bytes(FILE* fd, long *file_len) {
 
 img_file_type determine_file_type(const uint8_t *bytes, const size_t bytes_count) {
 
-    img_file_type type = detect_netpmb(bytes, bytes_count);
+    img_file_type type = detect_netpbm(bytes, bytes_count);
     if (type != UNSUPPORTED)
         return type;
 

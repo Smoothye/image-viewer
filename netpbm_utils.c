@@ -5,11 +5,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
-#include <asm-generic/errno-base.h>
 
 #define NETPBM_FILE_TOKEN_MAX_SIZE 16
 
-img_file_type detect_netpmb(const uint8_t *bytes, const size_t bytes_count) {
+img_file_type detect_netpbm(const uint8_t *bytes, const size_t bytes_count) {
 
     if (!bytes || bytes_count < 3)
         return UNSUPPORTED;
@@ -117,6 +116,9 @@ img_data load_ppm_or_pgm_from_memory(const uint8_t *bytes, const size_t bytes_co
     if (max_color_value <= 0 || errno == ERANGE)
         return FAIL;
 
+    if (max_color_value > 255)
+        return FAIL;
+
     ++bytes; // get rid of last newline before image data;
 
     const size_t size_of_colors_array = width * height;
@@ -168,6 +170,92 @@ img_data load_ppm_or_pgm_from_memory(const uint8_t *bytes, const size_t bytes_co
                 colors_itr->b = color_value;
                 ++colors_itr;
                 ctr = 0;
+            }
+        }
+
+        ++bytes;
+    }
+
+    const img_data result = { .width = width, .height = height, .data = colors };
+    return result;
+}
+
+img_data load_pbm_from_memory(const uint8_t *bytes, const size_t bytes_count) {
+
+    const uint8_t *end = bytes + bytes_count;
+    const img_data FAIL = { .width = 0, .height = 0, .data = NULL };
+
+    unsigned char token[NETPBM_FILE_TOKEN_MAX_SIZE];
+
+    if (!read_netpbm_token(&bytes, end, token))
+        return FAIL;
+
+    const bool is_ascii = token[1] == '1';
+
+    if (!read_netpbm_token(&bytes, end, token))
+        return FAIL;
+
+    errno = 0;
+    const int64_t width = strtol((char *) token, NULL, 10);
+    if (width <= 0 || errno == ERANGE)
+        return FAIL;
+
+    if (!read_netpbm_token(&bytes, end, token))
+        return FAIL;
+
+    errno = 0;
+    const int64_t height = strtol((char *) token, NULL, 10);
+    if (height <= 0 || errno == ERANGE)
+        return FAIL;
+
+    ++bytes; // get rid of last newline before image data;
+
+    const size_t size_of_colors_array = width * height;
+
+    rgb *colors = malloc(size_of_colors_array * sizeof(rgb));
+    if (!colors)
+        return FAIL;
+
+    rgb *colors_itr = colors;
+    const rgb *colors_end = colors + size_of_colors_array;
+
+    int64_t ctr = 0;
+    while (bytes < end && colors_itr < colors_end) {
+
+        if (is_ascii) {
+
+            if (*bytes == '0') {
+
+                *colors_itr = (rgb) { .r = 255, .g = 255, .b = 255 };
+                ++colors_itr;
+            }
+
+            else if (*bytes == '1') {
+
+                *colors_itr = (rgb) { .r = 0, .g = 0, .b = 0 };
+                ++colors_itr;
+            }
+        }
+        else {
+
+            for (uint8_t bit_pos = (1 << 7); bit_pos > 0; bit_pos >>= 1) {
+
+                if (ctr >= width) {
+                    ctr = 0;
+                    break;
+                }
+
+                const int byte = (*bytes) & bit_pos;
+                if (byte == 0) {
+                    *colors_itr = (rgb) { .r = 255, .g = 255, .b = 255 };
+                    ++colors_itr;
+                }
+                else {
+                    *colors_itr = (rgb) { .r = 0, .g = 0, .b = 0 };
+                    ++colors_itr;
+                }
+
+                ++ctr;
             }
         }
 

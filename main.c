@@ -38,6 +38,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     img_data img = {0};
     switch (determine_file_type(bytes, bytes_count)) {
         case PBM:
+            img = load_pbm_from_memory(bytes, bytes_count);
             break;
         case PGM:
         case PPM:

@@ -80,7 +80,7 @@ static int map_values_255(const uint32_t value, const uint32_t max) {
     return floor(255.0 / max * value);
 }
 
-img_data load_ppm_from_memory(const uint8_t *bytes, const size_t bytes_count) {
+img_data load_ppm_or_pgm_from_memory(const uint8_t *bytes, const size_t bytes_count) {
 
     const uint8_t *end = bytes + bytes_count;
     const img_data FAIL = { .width = 0, .height = 0, .data = NULL };
@@ -90,7 +90,8 @@ img_data load_ppm_from_memory(const uint8_t *bytes, const size_t bytes_count) {
     if (!read_netpbm_token(&bytes, end, token))
         return FAIL;
 
-    const bool is_ascii = token[1] == '3';
+    const bool is_ascii     = token[1] == '2' || token[1] == '3';
+    const bool is_grayscale = token[1] == '2' || token[1] == '5';
 
     if (!read_netpbm_token(&bytes, end, token))
         return FAIL;
@@ -118,12 +119,14 @@ img_data load_ppm_from_memory(const uint8_t *bytes, const size_t bytes_count) {
 
     ++bytes; // get rid of last newline before image data;
 
-    rgb *colors = malloc(3 * width * height * sizeof(rgb));
+    const size_t size_of_colors_array = width * height;
+
+    rgb *colors = malloc(size_of_colors_array * sizeof(rgb));
     if (!colors)
         return FAIL;
 
     rgb *colors_itr = colors;
-    const rgb *colors_end = colors + 3 * width * height;
+    const rgb *colors_end = colors + size_of_colors_array;
 
     uint_fast8_t ctr = 0;
     while (bytes < end && colors_itr < colors_end) {
@@ -145,17 +148,27 @@ img_data load_ppm_from_memory(const uint8_t *bytes, const size_t bytes_count) {
         }
         color_value = map_values_255(color_value, max_color_value);
 
-        ++ctr;
-        if (ctr == 1)
+        if (is_grayscale) {
             colors_itr->r = color_value;
-
-        else if (ctr == 2)
             colors_itr->g = color_value;
-
-        else {
             colors_itr->b = color_value;
+
             ++colors_itr;
-            ctr = 0;
+        }
+        else {
+
+            ++ctr;
+            if (ctr == 1)
+                colors_itr->r = color_value;
+
+            else if (ctr == 2)
+                colors_itr->g = color_value;
+
+            else {
+                colors_itr->b = color_value;
+                ++colors_itr;
+                ctr = 0;
+            }
         }
 
         ++bytes;

@@ -40,9 +40,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         case PBM:
             break;
         case PGM:
-            break;
         case PPM:
-            img = load_ppm_from_memory(bytes, bytes_count);
+            img = load_ppm_or_pgm_from_memory(bytes, bytes_count);
             break;
         case UNSUPPORTED:
             fputs("Given file type is not supported.\n", stderr);

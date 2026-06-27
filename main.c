@@ -97,6 +97,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 /* This function runs when a new event (mouse input, keypresses, etc.) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
+    if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+        SDL_RenderTexture(renderer, img_as_texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
+    }
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
@@ -106,9 +110,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 /* This function runs once per frame and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-
-    SDL_RenderTexture(renderer, img_as_texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }

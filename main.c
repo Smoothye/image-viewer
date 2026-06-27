@@ -12,6 +12,7 @@
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+static SDL_Texture *img_as_texture;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -70,6 +71,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
     SDL_SetRenderLogicalPresentation(renderer, img.width, img.height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
+    img_as_texture = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
+        img.width, img.height
+    );
+    SDL_SetTextureScaleMode(img_as_texture, SDL_SCALEMODE_NEAREST);
+
+    SDL_SetRenderTarget(renderer, img_as_texture);
+
     for (int32_t y = 0; y < img.height; ++y) {
         for (int32_t x = 0; x < img.width; ++x) {
 
@@ -80,7 +89,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
     free(img.data);
 
-    SDL_RenderPresent(renderer);
+    SDL_SetRenderTarget(renderer, NULL);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -97,6 +106,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 /* This function runs once per frame and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
+
+    SDL_RenderTexture(renderer, img_as_texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }

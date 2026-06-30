@@ -8,31 +8,6 @@
 
 #define NETPBM_FILE_TOKEN_MAX_SIZE 16
 
-img_file_type detect_netpbm(const uint8_t *bytes, const size_t bytes_count) {
-
-    if (!bytes || bytes_count < 3)
-        return UNSUPPORTED;
-
-    if (bytes[0] != 'P' || bytes[2] != '\n')
-        return UNSUPPORTED;
-
-    switch (bytes[1]) {
-        case '1':
-        case '4':
-            return PBM;
-
-        case '2':
-        case '5':
-            return PGM;
-
-        case '3':
-        case '6':
-            return PPM;
-
-        default:
-            return UNSUPPORTED;
-    }
-}
 
 static int read_netpbm_token(const uint8_t **bytes, const uint8_t *end, unsigned char *out) {
 

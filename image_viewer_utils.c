@@ -2,6 +2,16 @@
 #include "netpbm_utils.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+const img_file_headers headers[NUMBER_OF_SUPPORTED_HEADERS] = {
+    {.len = 3, .type = PBM, .bytes = "P1\n"},
+    {.len = 3, .type = PBM, .bytes = "P4\n"},
+    {.len = 3, .type = PGM, .bytes = "P2\n"},
+    {.len = 3, .type = PGM, .bytes = "P5\n"},
+    {.len = 3, .type = PPM, .bytes = "P3\n"},
+    {.len = 3, .type = PPM, .bytes = "P6\n"},
+};
 
 uint8_t *read_file_bytes(FILE* fd, long *file_len) {
 
@@ -34,9 +44,14 @@ uint8_t *read_file_bytes(FILE* fd, long *file_len) {
 
 img_file_type determine_file_type(const uint8_t *bytes, const size_t bytes_count) {
 
-    img_file_type type = detect_netpbm(bytes, bytes_count);
-    if (type != UNSUPPORTED)
-        return type;
+    for (size_t idx = 0; idx < NUMBER_OF_SUPPORTED_HEADERS; ++idx) {
+
+        if (headers[idx].len > bytes_count)
+            continue;
+
+        if (memcmp( bytes, headers[idx].bytes, headers[idx].len ) == 0)
+            return headers[idx].type;
+    }
 
     return UNSUPPORTED;
 }

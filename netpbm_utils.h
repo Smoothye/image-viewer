@@ -6,7 +6,6 @@
 
 #include "image_viewer_utils.h"
 
-img_file_type detect_netpbm(const uint8_t *bytes, size_t bytes_count);
 img_data load_ppm_or_pgm_from_memory(const uint8_t *bytes, size_t bytes_count);
 img_data load_pbm_from_memory(const uint8_t *bytes, size_t bytes_count);
 

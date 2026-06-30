@@ -12,6 +12,15 @@ typedef enum {
 }  img_file_type;
 
 typedef struct {
+    size_t len;
+    img_file_type type;
+    uint8_t bytes[255];
+} img_file_headers;
+
+#define NUMBER_OF_SUPPORTED_HEADERS 6
+extern const img_file_headers headers[NUMBER_OF_SUPPORTED_HEADERS];
+
+typedef struct {
     uint8_t r, g, b;
 } rgb;
 
